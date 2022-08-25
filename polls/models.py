@@ -7,3 +7,5 @@ class inviteMarried_request(models.Model)    :
     location=models.CharField(max_length=200)
     clock=models.CharField(max_length=200)
     date=models.DateField()
+    image = models.ImageField(null=True, blank=True,
+                              default='/placeholder.png')

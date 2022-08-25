@@ -8,6 +8,57 @@ from rest_framework.response import *
 from datetime import datetime
 from polls.serializers import  *
 from django.http import JsonResponse
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth.hashers import make_password
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        
+        serializer = UserSerializerWithToken(self.user).data
+        print(serializer)
+        for k, v in serializer.items():
+            data[k] = v
+        data["detail"]="ok"
+        print(data)
+        return data
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer     
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateUserProfile(request):
+    user = request.user
+    serializer = UserSerializerWithToken(user, many=False)
+    data = request.data
+    user.first_name = data['name']
+    user.username = data['username']
+    user.email = data['email']
+
+   
+    user.password = make_password(data['password'])
+
+    user.save()
+
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+def uploadImage(request):
+    
+
+    invite_id = request.data['invite_id']
+    invite_image = inviteMarried_request.objects.get(id=invite_id)
+    invite_image.image =request.FILES.get('image')
+    invite_image.save()
+    return Response('Image was uploaded')
+
 @api_view(['POST'])
 def invite_request(request): 
     data=request.data
@@ -44,3 +95,6 @@ def my_invites(request):
         return JsonResponse(a,safe=False)    
     except:
         return Response({"data":" ",'result':'ليس هناك اي دعوات'})
+
+
+        
